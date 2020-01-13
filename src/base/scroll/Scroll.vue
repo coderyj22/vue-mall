@@ -1,5 +1,5 @@
 <template>
-  <div class="wrapper">
+  <div ref="wrapper">
     <slot></slot>
   </div>
 </template>
@@ -18,29 +18,27 @@
       }
     },
     watch: {
-      data(){
-        setTimeout(()=>{
+      data() {
+        setTimeout(() => {
           this.refresh()
-        },20)
+        }, 20)
       }
     },
-    mounted(){
-      setTimeout(()=>{
+    mounted() {
+      setTimeout(() => {
         this._initScroll()
-      },20)
+      }, 20)
     },
-    methods:{
-      _initScroll(){
-        this.scroll = new BScroll(this.$refs.wrapper,{
-
+    methods: {
+      _initScroll() {
+        this.scroll = new BScroll(this.$refs.wrapper, {
+          click:true
         })
       },
-      refresh(){
+      refresh() {
         this.scroll.refresh()
       }
     }
-
-
   }
 </script>
 
