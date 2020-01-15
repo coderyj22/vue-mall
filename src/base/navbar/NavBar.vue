@@ -19,6 +19,7 @@
 </script>
 
 <style scoped lang="stylus">
+  @import "~common/stylus/mixin"
   .nav-bar
     width: 100%
     height 44px
@@ -27,10 +28,14 @@
     z-index 99
     .left
       flex 0 0 60px
+      display-center()
     .right
       flex 0 0 60px
+      display-center()
     .center
       flex 1
+      display-center()
+
 
 
 </style>

@@ -27,10 +27,11 @@
                      v-show="!showTab"
                      :data="['流行','新款','精选']"
                      @itemClick="getIndex"/>
-        <goods ref="goods" v-if="showGoods" :data="goods[currentType].list"/>
+        <goods @detailInfo="detailInfo" ref="goods" v-if="showGoods" :data="goods[currentType].list"/>
         <loading v-if="showLoading" class="loading"/>
       </div>
     </scroll>
+    <router-view></router-view>
     <tab-control :currentIndex="currentIndex"
                  v-show="showTab"
                  :data="['流行','新款','精选']"
@@ -76,7 +77,6 @@
       // 监听 goods-item里面图片的加载
       this.bus.$on('imgLoad', debounce(() => {
         this.$refs.scroll.refresh()
-
       }))
     },
     data() {
@@ -142,11 +142,16 @@
           this.goods[type].list = this.goods[type].list.concat(res.data.data.list)
           this.goods[type].page = currentPage
           this.$refs.scroll.refresh()
-          if (isFirst) {
+          if (!isFirst) {
             this.$refs.scroll.finishPullUp()
             this.showLoading = false
             this.$refs.scroll.refresh()
           }
+        })
+      },
+      detailInfo(id){
+        this.$router.push({
+          path:`/home/${id}`
         })
       },
       getIndex(i) {

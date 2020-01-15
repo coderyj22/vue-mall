@@ -11,7 +11,6 @@
         <span class="fav">{{goodsInfo.cfav}}</span>
       </div>
     </div>
-    <router-view></router-view>
   </div>
 </template>
 
@@ -27,11 +26,12 @@
       }
     },
     methods:{
-      itemClick(goodsInfo){
-        let id = goodsInfo.iid
-      },
       imgLoad(){
         this.bus.$emit('imgLoad')
+      },
+      itemClick(goodsInfo){
+        let id = goodsInfo.iid
+        this.$emit('detailInfo',id)
       }
     }
   }
@@ -48,7 +48,7 @@
       margin-bottom 3px
       img
         width: 100%
-        height 230px
+        height 250px
         border-radius 5px
 
     .text-info

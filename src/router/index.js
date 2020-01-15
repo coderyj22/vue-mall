@@ -19,7 +19,7 @@ const routes = [
     component:Home,
     children:[
       {
-        path:':iid',
+        path:':id',
         component:GoodDetail
       }
     ]
@@ -35,7 +35,8 @@ const routes = [
   {
     path:'/profile',
     component:Profile
-  },
+  }
+
 
 ]
 

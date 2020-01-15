@@ -4,7 +4,7 @@
       <slot></slot>
     </div>
     <div class="dots">
-      <span :class="{active:currentIndex===index}" class="dot" v-for="(item,index) in length"></span>
+      <span @click="dotClick(index)" :class="{active:currentIndex===index}" class="dot" v-for="(item,index) in length"></span>
     </div>
   </div>
 </template>
@@ -27,6 +27,21 @@
       autoPlay: {
         type: Boolean,
         default: false
+      },
+      data:{
+        type:Array,
+        default(){
+          return []
+        }
+      }
+    },
+    watch:{
+      data(){
+        if(this.slider){
+          console.log('data改变refresh');
+          this._setSliderWidth()
+          this.slider.refresh()
+        }
       }
     },
     data() {
@@ -41,11 +56,13 @@
         this._setSliderWidth()
         this._initDots()
         this._initScroll()
+
+        if(this.autoPlay){
+          this._play()
+        }
       }, 40)
 
-      if(this.autoPlay){
-        this._play()
-      }
+
 
       window.addEventListener('resize', () => {
         // this._setSliderWidth()
@@ -74,6 +91,7 @@
     methods: {
       _initScroll() {
         this.slider = new BScroll(this.$refs.slider, {
+          click:true,
           scrollX: true,
           scrollY: false,
           momentum: false,
@@ -82,7 +100,6 @@
             loop: this.loop
           }
         })
-
         if (this.autoPlay) {
           this.slider.on('scrollEnd', () => {
             this.currentIndex = this.slider.getCurrentPage().pageX
@@ -90,10 +107,6 @@
             this._play()
           })
         }
-
-        // this.slider.on('touchEnd', () => {
-        //   console.log('touchEnd');
-        // })
       },
       _setSliderWidth(resize) {
         if(!this.$refs.sliderGroup.children.length){
@@ -103,18 +116,23 @@
         this.children = this.$refs.sliderGroup.children
         let sliderWidth = 0
         let clientWidth = this.$refs.slider.clientWidth
-        for (let i = 0; i < this.children.length; i++) {
-          let child = this.children[i]
-          addClass(child, 'slider-item')
-          // child.className = 'slider-item'
-          child.style.width = clientWidth + 'px'
-          sliderWidth += clientWidth
+        if(this.$refs.sliderGroup.children.length===1){
+          console.log('slider: 轮播图length为1');
+          sliderWidth = clientWidth
+        }else{
+          for (let i = 0; i < this.children.length; i++) {
+            let child = this.children[i]
+            addClass(child, 'slider-item')
+            // child.className = 'slider-item'
+            child.style.width = clientWidth + 'px'
+            sliderWidth += clientWidth
+          }
+          if (this.loop && !resize) {
+            sliderWidth += 2 * clientWidth
+          }
         }
-        if (this.loop && !resize) {
-          sliderWidth += 2 * clientWidth
-        }
-        console.log('children.length: '+this.children.length);
         this.$refs.sliderGroup.style.width = sliderWidth + 'px'
+
       },
       _initDots() {
         this.length = this.children.length
@@ -124,6 +142,11 @@
         this.timer = setTimeout(() => {
           this.slider.next()
         }, this.interval)
+      },
+      dotClick(i){
+        clearTimeout(this.timer)
+        this.currentIndex = i
+        this.slider.goToPage(i)
       },
       refresh() {
         this.slider.refresh()

@@ -1,6 +1,10 @@
 <template>
   <div class="goods" v-if="data.length">
-    <goods-item v-for="item in data" :goods-info="item"></goods-item>
+    <goods-item v-for="(item,index) in data"
+                :key="index"
+                :goods-info="item"
+                @detailInfo="detailInfo"
+    />
   </div>
 </template>
 
@@ -20,7 +24,9 @@
       }
     },
     methods:{
-
+      detailInfo(id){
+        this.$emit("detailInfo",id)
+      }
     }
   }
 </script>
