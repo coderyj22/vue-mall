@@ -41,7 +41,7 @@
         this._setSliderWidth()
         this._initDots()
         this._initScroll()
-      }, 20)
+      }, 40)
 
       if(this.autoPlay){
         this._play()
@@ -96,6 +96,10 @@
         // })
       },
       _setSliderWidth(resize) {
+        if(!this.$refs.sliderGroup.children.length){
+          console.log('无length');
+          return
+        }
         this.children = this.$refs.sliderGroup.children
         let sliderWidth = 0
         let clientWidth = this.$refs.slider.clientWidth
@@ -109,6 +113,7 @@
         if (this.loop && !resize) {
           sliderWidth += 2 * clientWidth
         }
+        console.log('children.length: '+this.children.length);
         this.$refs.sliderGroup.style.width = sliderWidth + 'px'
       },
       _initDots() {
@@ -129,6 +134,7 @@
 
 <style scoped lang="stylus">
   .slider
+    overflow hidden
     .slider-group
       position: relative;
       overflow hidden

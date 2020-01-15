@@ -7,6 +7,7 @@ import Home from "../components/home/Home";
 import Category from "../components/category/Category";
 import Profile from "../components/profile/Profile";
 import Cart from "../components/cart/Cart";
+import GoodDetail from "../components/home/children/GoodDetail";
 
 const routes = [
   {
@@ -15,7 +16,13 @@ const routes = [
   },
   {
     path:'/home',
-    component:Home
+    component:Home,
+    children:[
+      {
+        path:':iid',
+        component:GoodDetail
+      }
+    ]
   },
   {
     path:'/category',

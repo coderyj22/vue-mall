@@ -5,3 +5,15 @@ export function getHome() {
     url:'/home/multidata'
   })
 }
+
+export function getGoods(type,page) {
+  return request({
+    url:`/home/data?type=${type}&page=${page}`
+  })
+}
+
+export function getDetail(id) {
+  return request({
+    url:`/detail?iid=${id}`
+  })
+}

@@ -8,5 +8,10 @@ module.exports = {
         'base':'@/base'
       }
     }
+  },
+  devServer:{
+    hot:false,
+    port: 8083,
+    open:true
   }
 }

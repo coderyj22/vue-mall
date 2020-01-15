@@ -3,7 +3,12 @@
     <nav-bar class="nav-bar">
       <h1 slot="center" class="title">YJ 购物街</h1>
     </nav-bar>
-    <scroll class="content">
+    <scroll ref="scroll"
+            class="content"
+            :probeType="probeType"
+            :pullUpLoad="pullUpLoad"
+            @loadData="loadData"
+            @scroll="printY">
       <div>
         <div class="slider-wrapper">
           <slider :loop="true" :autoPlay="true" v-if="banner.length">
@@ -12,46 +17,25 @@
             </a>
           </slider>
         </div>
-        <recommend v-if="recommend.length" :data="recommend"></recommend>
+        <recommend v-if="recommend.length" :data="recommend"/>
         <div class="feature">
           <img src="~common/img/recommend_bg.jpg" alt="">
         </div>
-        <tab-control :data="['流行','新款','精选']"></tab-control>
-
-        <ul>
-          <li>1</li>
-          <li>2</li>
-          <li>3</li>
-          <li>4</li>
-          <li>5</li>
-          <li>6</li>
-          <li>7</li>
-          <li>8</li>
-          <li>9</li>
-          <li>10</li>
-          <li>11</li>
-          <li>12</li>
-          <li>13</li>
-          <li>14</li>
-          <li>15</li>
-          <li>16</li>
-          <li>17</li>
-          <li>18</li>
-          <li>19</li>
-          <li>20</li>
-          <li>21</li>
-          <li>22</li>
-          <li>23</li>
-          <li>24</li>
-          <li>25</li>
-          <li>26</li>
-          <li>27</li>
-          <li>28</li>
-          <li>29</li>
-          <li>30</li>
-        </ul>
+        <tab-control :currentIndex="currentIndex"
+                     ref="tab"
+                     class="tab"
+                     v-show="!showTab"
+                     :data="['流行','新款','精选']"
+                     @itemClick="getIndex"/>
+        <goods ref="goods" v-if="showGoods" :data="goods[currentType].list"/>
+        <loading v-if="showLoading" class="loading"/>
       </div>
     </scroll>
+    <tab-control :currentIndex="currentIndex"
+                 v-show="showTab"
+                 :data="['流行','新款','精选']"
+                 @itemClick="getIndex"/>
+    <back-top v-if="showTop" @backTopClick="backTopClick"/>
   </div>
 </template>
 
@@ -61,7 +45,11 @@
   import Recommend from "./children/Recommend";
   import Scroll from "base/scroll/Scroll";
   import TabControl from "./children/TabControl";
-  import {getHome} from "network/home";
+  import Goods from "./children/Goods";
+  import Loading from 'base/loading/Loading'
+  import BackTop from 'base/backtop/BackTop'
+  import {debounce} from "common/js/util";
+  import {getHome, getGoods} from "network/home";
   import {ERR_OK} from "network/config";
 
   export default {
@@ -71,15 +59,72 @@
       Slider,
       Recommend,
       Scroll,
-      TabControl
+      TabControl,
+      Goods,
+      Loading,
+      BackTop
     },
     created() {
       this._getHome()
+      this._getGoods('pop', true)
+      this._getGoods('new', true)
+      this._getGoods('sell', true)
+      this.showGoods = true
+
+    },
+    mounted() {
+      // 监听 goods-item里面图片的加载
+      this.bus.$on('imgLoad', debounce(() => {
+        this.$refs.scroll.refresh()
+
+      }))
     },
     data() {
       return {
         banner: [],
-        recommend: []
+        pullUpLoad: true,     // 开启上啦加载更多
+        showLoading: false,
+        probeType: 3,          // 开启实时监听scrollY
+        recommend: [],         // 轮播图
+        showTop: false,        // 显示backTop
+        showTab: false,         // 显示 固定导航
+        tabControlOffsetTop: 0,
+        currentIndex: 0,
+        scrollY: 0,
+        tabFirst: true,       // 第一次进入的时候保存 tabControlOffsetTop 的值 , 之后不允许修改
+        goods: {
+          'pop': {
+            page: 0,
+            list: []
+          },
+          'new': {
+            page: 0,
+            list: []
+          },
+          'sell': {
+            page: 0,
+            list: []
+          },
+        },
+        currentType: 'pop',
+        showGoods: false
+      }
+    },
+    watch: {
+      scrollY() {
+        if(this.tabFirst){
+          if (this.scrollY) {
+            this.tabControlOffsetTop = this.$refs.tab.$el.offsetTop
+            this.tabFirst = false   // 为false 之后不允许修改tabControlOffsetTop的值
+          }
+        }
+        this.showTop = this.scrollY >= 2000 ? true : false
+        this.showTab = this.scrollY >= this.tabControlOffsetTop ? true : false
+        if (this.showTab) {
+          this.$refs.goods.$el.style.marginTop = '56px'
+          return
+        }
+        this.$refs.goods.$el.style.marginTop = '0px'
       }
     },
     methods: {
@@ -88,9 +133,35 @@
           if (res.statusText === ERR_OK) {
             this.banner = res.data.data.banner.list
             this.recommend = res.data.data.recommend.list
-            console.log(res.data.data);
           }
         })
+      },
+      _getGoods(type, isFirst = false) {
+        let currentPage = this.goods[type].page + 1
+        getGoods(type, currentPage).then(res => {
+          this.goods[type].list = this.goods[type].list.concat(res.data.data.list)
+          this.goods[type].page = currentPage
+          this.$refs.scroll.refresh()
+          if (isFirst) {
+            this.$refs.scroll.finishPullUp()
+            this.showLoading = false
+            this.$refs.scroll.refresh()
+          }
+        })
+      },
+      getIndex(i) {
+        this.currentType = i === 0 ? 'pop' : i === 1 ? 'new' : 'sell'
+        this.currentIndex = i
+      },
+      loadData() {
+        this._getGoods(this.currentType)
+        this.showLoading = true
+      },
+      printY(p) {
+        this.scrollY = -p
+      },
+      backTopClick() {
+        this.$refs.scroll.scrollTo(0, 400)
       }
     }
   }
@@ -122,10 +193,16 @@
         overflow hidden
         z-index 9
 
+
       .feature
         margin-bottom 10px
+
         img
           width: 100%
 
+      .loading
+        position relative
+        width: 100%
+        z-index 1000
 
 </style>
