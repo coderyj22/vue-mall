@@ -3,7 +3,7 @@
     <div class="good-detail">
       <nav-bar class="nav-bar">
         <div slot="left" @click="backClick">
-          <i class="icon icon-back"></i>
+          <i class="icon icon-back"/>
         </div>
         <div slot="center" class="center">
           <div class="item"
@@ -17,7 +17,7 @@
       <scroll class="content" v-if="dataInfo" ref="scroll">
         <div class="wrapper">
           <div class="slider-wrapper">
-            <slider :loop="true" :autoPlay="true" v-if="topImages.length" :data="topImages">
+            <slider class="slider" :loop="true" :autoPlay="true" v-if="topImages.length" :data="topImages">
               <a href="" v-for="item in topImages">
                 <img :src="item" alt="">
               </a>
@@ -88,106 +88,149 @@
               <img @load="imgLoad" :src="item" alt="">
             </div>
           </div>
-          <ul>
-            <li>1</li>
-            <li>2</li>
-            <li>3</li>
-            <li>4</li>
-            <li>5</li>
-            <li>6</li>
-            <li>7</li>
-            <li>8</li>
-            <li>9</li>
-            <li>10</li>
-          </ul>
+          <!-- 参数 -->
+          <div class="param-info" v-if="isRenderParamsInfo">
+            <table class="info-rule">
+              <tr v-for="item in paramsInfo.rule.tables[0]">
+                <td v-for="i in item">
+                  {{i}}
+                </td>
+              </tr>
+            </table>
+            <table class="info-size">
+              <tr v-for="item in paramsInfo.info.set">
+                <td class="key">{{item.key}}</td>
+                <td class="value">{{item.value}}</td>
+              </tr>
+            </table>
+          </div>
+          <!-- 用户评论 -->
+          <div class="comment-info">
+            <div class="info-header">
+              <div class="header-title">用户评价</div>
+              <div class="header-more">更多 ></div>
+            </div>
+            <div class="info-user">
+              <img :src="rate.avatar" alt="">
+              <span class="uname">{{rate.uname}}</span>
+            </div>
+            <div class="info-detail">
+              <p class="rate-content">{{rate.content}}</p>
+              <div class="detail-style">
+                {{rate.style}}
+              </div>
+            </div>
+          </div>
+          <!-- 热门推荐 -->
+          <div class="recommend-hot">
+            <div class="hot-header">热门推荐</div>
+            <div class="hot-view">
+              <hot-recommend :goods="hotRecommend" v-if="hotRecommend.length" />
+            </div>
+          </div>
         </div>
       </scroll>
+      <bottom-bar></bottom-bar>
     </div>
   </transition>
 </template>
 
 <script>
-  import NavBar from "base/navbar/NavBar";
-  import Slider from "base/slider/Slider";
-  import Scroll from "base/scroll/Scroll";
-  import {getDetail} from "network/home";
-  import {GoodInfo} from "common/js/myClass";
-  import {debounce} from "common/js/util";
+import NavBar from "base/navbar/NavBar";
+import Slider from "base/slider/Slider";
+import Scroll from "base/scroll/Scroll";
+import HotRecommend from "./HotRecommend";
+import BottomBar from "./BottomBar";
+import {getDetail, getRecommend} from "network/home";
+import {GoodInfo, RateInfo} from "common/js/myClass";
+import {debounce} from "common/js/util";
 
-  export default {
-    name: "GoodDetail",
-    components: {
-      NavBar,
-      Slider,
-      Scroll
-    },
-    data() {
-      return {
-        id: null,
-        tabBar: ['商品', '参数', '评论', '推荐'],
-        currentIndex: 0,
-        topImages: [],         // 轮播图数据
-        dataInfo: {}
-      }
-    },
-    created() {
-      this.id = this.$router.history.current.params.id
-      this._getDetail()
-    },
-    computed:{
-      addCls(isBetter){
-        console.log(isBetter);
-        return 1
-      }
-    },
-    mounted() {
-    },
-    filters: {
-      format(num) {
-        let len = num.toString().length
-        if (len >= 4) {
-          return num
-        }
-        num += '.'
-        len++
-        while (len < 4) {
-          num = num + '0'
-          len++
-        }
+export default {
+  name: "GoodDetail",
+  components: {
+    NavBar,
+    Slider,
+    Scroll,
+    HotRecommend,
+    BottomBar
+  },
+  data() {
+    return {
+      id: null,
+      tabBar: ['商品', '参数', '评论', '推荐'],
+      currentIndex: 0,
+      topImages: [],         // 轮播图数据
+      dataInfo: {},
+      paramsInfo: {},
+      isRenderParamsInfo: false,
+      rate: {},
+      hotRecommend:[]
+    }
+  },
+  created() {
+    this.id = this.$router.history.current.params.id
+    this._getDetail()
+    this._getRecommend()
+  },
+  computed: {
+    addCls(isBetter) {
+      console.log(isBetter);
+      return 1
+    }
+  },
+  mounted() {
+  },
+  filters: {
+    format(num) {
+      let len = num.toString().length
+      if (len >= 4) {
         return num
       }
-    },
-    methods: {
-      _getDetail() {
-        getDetail(this.id).then(res => {
-          this.topImages = res.data.result.itemInfo.topImages
-          this.dataInfo = this._normalizeData(res.data.result)
-          console.log(this.dataInfo);
-          console.log(res.data.result);
-        })
-      },
-      tabBarClick(i) {
-        this.currentIndex = i
-      },
-      backClick() {
-        this.$router.back()
-      },
-      imgLoad(){
-        // debounce(this.$refs.scroll.refresh(),100)
-        if(this.timer){
-          clearTimeout(this.timer)
-        }
-        this.timer = setTimeout(()=>{
-          this.$refs.scroll.refresh()
-        },200)
-      },
-      _normalizeData(data) {
-        let ret = []
-        ret.push(new GoodInfo(data.columns, data.itemInfo, data.shopInfo,data.detailInfo))
-        return ret[0]
+      num += '.'
+      len++
+      while (len < 4) {
+        num = num + '0'
+        len++
       }
+      return num
+    }
+  },
+  methods: {
+    _getDetail() {
+      getDetail(this.id).then(res => {
+        this.topImages = res.data.result.itemInfo.topImages
+        this.dataInfo = this._normalizeData(res.data.result)
+        this.paramsInfo = res.data.result.itemParams
+        this.isRenderParamsInfo = true
+        this.rate = new RateInfo(res.data.result.rate.list[0])
+      })
+    },
+    _getRecommend() {
+      getRecommend().then(res => {
+        // console.log(res.data.data.list);
+        this.hotRecommend = res.data.data.list
+      })
+    },
+    tabBarClick(i) {
+      this.currentIndex = i
+    },
+    backClick() {
+      this.$router.back()
+    },
+    imgLoad() {
+      try {
+        debounce(this.$refs.scroll.refresh(), 100)
+      } catch (err) {
+        console.log(err);
+      }
+    },
+    _normalizeData(data) {
+      let ret = []
+      ret.push(new GoodInfo(data.columns, data.itemInfo, data.shopInfo, data.detailInfo))
+      return ret[0]
     }
   }
+}
 </script>
 
 <style scoped lang="stylus">
@@ -227,7 +270,7 @@
     .content
       position: absolute;
       top 44px
-      bottom: 0
+      bottom: 44px
       width: 100%
       z-index 9
       overflow hidden
@@ -242,6 +285,12 @@
           z-index 10
           overflow: hidden;
           height 300px
+
+          .slider
+            height: 100%;
+
+            a
+              height: 100%
 
         .base-info
           padding 10px
@@ -309,7 +358,7 @@
 
         .shop-info
           padding 10px
-          box-shadow 0 5px 0 rgba(0,0,0,.1)
+          box-shadow 0 5px 0 rgba(0, 0, 0, .1)
 
           .shopTitle
             height 45px
@@ -335,6 +384,7 @@
           .shop-middle
             display flex
             margin-bottom: 30px;
+
             .shop-m-left
               flex 1
               display flex
@@ -359,44 +409,149 @@
               flex 1
               display-center()
               font-size: 0
+
               table
                 tr
                   display block
                   color $color-text-x
                   font-size: 0
                   margin-bottom 5px
+
                   td
                     font-size: $font-size-medium
                     margin-right 10px
                     display inline-block
+
                   .high
                     background-color: red
                     color $color-background
+
                   .low
                     background-color: green
                     color $color-background
+
           .shop-bottom
             margin-bottom 20px
             display-center()
+
             .btn
               text-align center
               line-height 30px
               width: 150px
               height 30px
               border-radius 6px
-              background-color: rgba(0,0,0,.1)
+              background-color: rgba(0, 0, 0, .1)
 
         .desc-title
           margin 10px 0 0 0
           padding 20px
           font-size $font-size-medium-x
           color $color-text-m
+
         .desc-key
           padding: 5px 20px 20px 20px
           margin-bottom 10px
+
         .desc-list
           .list
             width: 100%
+
             img
               width: 100%
+
+        .param-info
+          margin-top 10px
+          box-shadow 0 -2px 0px 2px rgba(0, 0, 0, .1);
+          padding 20px 15px 10px 15px
+          font-size: $font-size-medium
+          border-bottom: 5px solid #f2f5f8
+
+          .info-rule
+            width: 100%
+            border-bottom 1px solid rgba(0, 0, 0, .1)
+
+            tr
+              height: 42px
+              display flex
+              border-bottom 1px solid rgba(0, 0, 0, .1);
+
+              td
+                flex 1
+                line-height 42px
+
+          .info-size
+            width 100%
+
+            tr
+              height 42px
+              display flex
+              line-height 42px
+              border-bottom 1px solid rgba(0, 0, 0, .1);
+
+              .key
+                flex 0 0 90px
+
+              .value
+                flex 1
+                color #eb4868
+
+        .comment-info
+          padding 7px 15px 10px 15px
+          border-bottom 5px solid #f2f5f8
+
+          .info-header
+            display flex
+            justify-content space-between
+            color $color-text
+            height 50px
+            align-items center
+            border-bottom: 1px solid rgba(0, 0, 0, .1)
+
+            .header-title
+              font-size: $font-size-large
+
+            .header-more
+              font-size: $font-size-medium
+
+          .info-user
+            display flex
+            align-items center
+            margin 10px 0
+
+            img
+              width 42px
+              height 42px
+              border-radius 50%
+
+            .uname
+              margin-left 15px
+              font-size: $font-size-medium
+              color $color-theme-x
+
+          .info-detail
+            color $color-text-x
+            margin-bottom 10px
+
+            .rate-content
+              font-size: $font-size-medium
+              letter-spacing 1px
+              color $color-text-m
+
+            .detail-style
+              margin-top 13px
+              color $color-text-x
+              font-size: $font-size-small
+
+        .recommend-hot
+          padding: 5px 10px
+
+          .hot-header
+            line-height 40px
+            color $color-text
+            height 40px
+            padding-left:5px
+
+          .hot-view
+            margin-top: 5px
+
 </style>

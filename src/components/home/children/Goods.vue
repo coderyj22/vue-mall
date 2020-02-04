@@ -37,4 +37,5 @@
   justify-content space-around
   flex-wrap wrap
   font-size:0
+  padding 5px
 </style>

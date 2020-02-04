@@ -18,3 +18,14 @@ export class GoodInfo {
   }
 }
 
+export class RateInfo {
+  constructor(rate) {
+    this.content = rate.content
+    this.created = rate.created
+    this.rateId = rate.rateId
+    this.style = rate.style
+    this.uname = rate.user.uname
+    this.avatar = rate.user.avatar
+  }
+}
+

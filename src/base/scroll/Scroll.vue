@@ -32,6 +32,11 @@
         }, 20)
       }
     },
+    data(){
+      return {
+        scroll:null
+      }
+    },
     mounted() {
       setTimeout(() => {
         this._initScroll()
