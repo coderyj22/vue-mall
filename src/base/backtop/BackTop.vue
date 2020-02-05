@@ -20,7 +20,7 @@
   .back-top
     position: fixed;
     z-index 999
-    right: 30px
+    right: 15px
     bottom: 70px
     width: 30px
     height: 30px

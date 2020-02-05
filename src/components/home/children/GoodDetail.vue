@@ -1,20 +1,19 @@
 <template>
   <transition name="slide" class="slide">
     <div class="good-detail">
-      <nav-bar class="nav-bar">
+      <nav-bar ref="navBar" class="nav-bar">
         <div slot="left" @click="backClick">
           <i class="icon icon-back"/>
         </div>
         <div slot="center" class="center">
           <div class="item"
-               v-for="(item,index)
-             in tabBar"
+               v-for="(item,index) in tabBar"
                @click="tabBarClick(index)"
                :class="{active:currentIndex===index}">{{item}}
           </div>
         </div>
       </nav-bar>
-      <scroll class="content" v-if="dataInfo" ref="scroll">
+      <scroll class="content" v-if="dataInfo" ref="scroll" :probeType="probeType" @scroll="scroll">
         <div class="wrapper">
           <div class="slider-wrapper">
             <slider class="slider" :loop="true" :autoPlay="true" v-if="topImages.length" :data="topImages">
@@ -89,7 +88,7 @@
             </div>
           </div>
           <!-- 参数 -->
-          <div class="param-info" v-if="isRenderParamsInfo">
+          <div ref="paramInfo" class="param-info" v-if="isRenderParamsInfo">
             <table class="info-rule">
               <tr v-for="item in paramsInfo.rule.tables[0]">
                 <td v-for="i in item">
@@ -105,7 +104,7 @@
             </table>
           </div>
           <!-- 用户评论 -->
-          <div class="comment-info">
+          <div ref="commentInfo" class="comment-info" v-if="rate">
             <div class="info-header">
               <div class="header-title">用户评价</div>
               <div class="header-more">更多 ></div>
@@ -122,15 +121,16 @@
             </div>
           </div>
           <!-- 热门推荐 -->
-          <div class="recommend-hot">
+          <div ref="recommendInfo" class="recommend-hot">
             <div class="hot-header">热门推荐</div>
             <div class="hot-view">
-              <hot-recommend :goods="hotRecommend" v-if="hotRecommend.length" />
+              <hot-recommend :goods="hotRecommend" v-if="hotRecommend.length"/>
             </div>
           </div>
         </div>
       </scroll>
-      <bottom-bar></bottom-bar>
+      <bottom-bar/>
+      <back-top v-show="showTop" @backTopClick="backTopClick"/>
     </div>
   </transition>
 </template>
@@ -141,6 +141,7 @@ import Slider from "base/slider/Slider";
 import Scroll from "base/scroll/Scroll";
 import HotRecommend from "./HotRecommend";
 import BottomBar from "./BottomBar";
+import BackTop from "base/backtop/BackTop";
 import {getDetail, getRecommend} from "network/home";
 import {GoodInfo, RateInfo} from "common/js/myClass";
 import {debounce} from "common/js/util";
@@ -152,7 +153,8 @@ export default {
     Slider,
     Scroll,
     HotRecommend,
-    BottomBar
+    BottomBar,
+    BackTop
   },
   data() {
     return {
@@ -163,8 +165,11 @@ export default {
       dataInfo: {},
       paramsInfo: {},
       isRenderParamsInfo: false,
-      rate: {},
-      hotRecommend:[]
+      rate: null,
+      hotRecommend: [],
+      themeTops: [],
+      probeType: 3,
+      showTop: false
     }
   },
   created() {
@@ -172,13 +177,10 @@ export default {
     this._getDetail()
     this._getRecommend()
   },
-  computed: {
-    addCls(isBetter) {
-      console.log(isBetter);
-      return 1
-    }
-  },
   mounted() {
+  },
+  updated() {
+    this._calcOffsetTop()
   },
   filters: {
     format(num) {
@@ -202,7 +204,13 @@ export default {
         this.dataInfo = this._normalizeData(res.data.result)
         this.paramsInfo = res.data.result.itemParams
         this.isRenderParamsInfo = true
-        this.rate = new RateInfo(res.data.result.rate.list[0])
+        if (res.data.result.rate.cRate) {
+          console.log(res.data.result.rate);
+          this.rate = new RateInfo(res.data.result.rate.list[0])
+        }else{
+          this.rate = false
+        }
+
       })
     },
     _getRecommend() {
@@ -213,6 +221,7 @@ export default {
     },
     tabBarClick(i) {
       this.currentIndex = i
+      this.$refs.scroll.scroll.scrollTo(0, -this.themeTops[i], 0)
     },
     backClick() {
       this.$router.back()
@@ -228,6 +237,47 @@ export default {
       let ret = []
       ret.push(new GoodInfo(data.columns, data.itemInfo, data.shopInfo, data.detailInfo))
       return ret[0]
+    },
+    _calcOffsetTop() {
+      this.themeTops = []
+      if(this.$refs.paramInfo.offsetTop){
+        console.log(this.$refs.paramInfo.offsetTop);
+        this.themeTops.push(this.$refs.navBar.$el.offsetTop)
+        this.themeTops.push(this.$refs.paramInfo.offsetTop)
+        if(this.rate){
+          this.themeTops.push(this.$refs.commentInfo.offsetTop)
+        }else{
+          this.themeTops.push(this.$refs.paramInfo.offsetTop)
+        }
+        this.themeTops.push(this.$refs.recommendInfo.offsetTop)
+      }else{
+        console.log('数据请求太快,还未渲染到页面上');
+      }
+
+    },
+    backTopClick() {
+      console.log(1);
+      this.$refs.scroll.scrollTo(0,0,0)
+    },
+    scroll(p) {
+      const y = -p
+      if (y > 2000) {
+        this.showTop = true
+      }else{
+        this.showTop = false
+      }
+      for (let i = 0; i < this.themeTops.length; i++) {
+        if (this.themeTops[i + 1] && y > this.themeTops[i] && y < this.themeTops[i + 1]) {
+          this.currentIndex = i
+        } else {
+          if (y < 0) {
+            this.currentIndex = 0
+          }
+          if (y > this.themeTops[this.themeTops.length - 1]) {
+            this.currentIndex = this.themeTops.length - 1
+          }
+        }
+      }
     }
   }
 }
@@ -252,6 +302,7 @@ export default {
       z-index 9
       background-color: $color-background
       color $color-theme-x
+      box-shadow 0 2px 2px 0px rgba(0,0,0,.1)
 
       .icon
         font-size 25px
@@ -493,7 +544,12 @@ export default {
 
               .value
                 flex 1
+                max-width 250px
                 color #eb4868
+                text-overflow ellipsis
+                overflow hidden
+                white-space nowrap
+
 
         .comment-info
           padding 7px 15px 10px 15px
@@ -549,7 +605,7 @@ export default {
             line-height 40px
             color $color-text
             height 40px
-            padding-left:5px
+            padding-left: 5px
 
           .hot-view
             margin-top: 5px

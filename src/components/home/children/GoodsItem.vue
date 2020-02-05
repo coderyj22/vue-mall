@@ -34,7 +34,6 @@
     mounted(){
       // console.log(this.goodsInfo);
       if(this.imgStyle){
-        console.log('123');
         this.$refs.img.style.borderRadius = 0
         this.$refs.img.style.height = `220px`
       }
@@ -44,7 +43,6 @@
         this.bus.$emit('imgLoad')
       },
       itemClick(goodsInfo){
-        console.log(goodsInfo);
         let id = goodsInfo.iid ? goodsInfo.iid : goodsInfo.item_id
         this.$emit('detailInfo',id)
       }
