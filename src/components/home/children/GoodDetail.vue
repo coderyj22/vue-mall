@@ -143,24 +143,23 @@ import Slider from "base/slider/Slider";
 import Scroll from "base/scroll/Scroll";
 import HotRecommend from "./HotRecommend";
 import BottomBar from "./BottomBar";
-import BackTop from "base/backtop/BackTop";
 import ShowToast from "base/showtoast/ShowToast";
 import {getDetail, getRecommend} from "network/home";
 import {GoodInfo, RateInfo, ShopInfo} from "common/js/myClass";
 import {debounce} from "common/js/util";
-
+import {mixinBackTop} from 'common/js/mixin'
 import {mapMutations} from 'vuex'
-import {ADD_TO_CART} from "../../../store/mutation-type";
+// import {ADD_TO_CART} from "../../../store/mutation-type";
 
 export default {
   name: "GoodDetail",
+  mixins:[mixinBackTop],
   components: {
     NavBar,
     Slider,
     Scroll,
     HotRecommend,
     BottomBar,
-    BackTop,
     ShowToast
   },
   data() {
@@ -176,7 +175,6 @@ export default {
       hotRecommend: [],
       themeTops: [],
       probeType: 3,
-      showTop: false,
       showToast: false
     }
   },
@@ -275,10 +273,9 @@ export default {
       }
 
     },
-    backTopClick() {
-      console.log(1);
-      this.$refs.scroll.scrollTo(0, 0, 0)
-    },
+    // backTopClick() {
+    //   this.$refs.scroll.scrollTo(0, 0, 0)
+    // },
     scroll(p) {
       const y = -p
       if (y > 2000) {
