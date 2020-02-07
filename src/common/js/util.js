@@ -9,3 +9,7 @@ export function debounce(func, delay) {
     }, delay)
   }
 }
+
+export function dataFormat(fmt,data) {
+
+}

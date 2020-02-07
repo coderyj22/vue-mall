@@ -29,3 +29,16 @@ export class RateInfo {
   }
 }
 
+export class ShopInfo{
+  constructor(id,shopInfo,img){
+    this.id = id
+    this.title = shopInfo.title
+    this.imgUrl = img
+    this.price = shopInfo.realPrice
+    this.shopLogo = shopInfo.shopLogo
+    this.shopUrl = shopInfo.shopUrl
+    this.shopName = shopInfo.shopName
+    this.desc = shopInfo.desc
+  }
+}
+

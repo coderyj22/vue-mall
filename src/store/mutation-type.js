@@ -1,0 +1,12 @@
+export const ADD_TO_CART = 'ADD_TO_CART'
+
+export const DECREMENT_TO_CART = 'DECREMENT_TO_CART'
+
+export const CHANGE_CHECKED = 'CHANGE_CHECKED'
+
+export const TOTAL_PRICE = 'TOTAL_PRICE'
+
+export const ALL_SELECTED = 'ALL_SELECTED'
+
+export const DELETE_SELECT = 'DELETE_SELECT'
+

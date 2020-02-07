@@ -64,7 +64,7 @@
                   <tr v-for="item in dataInfo.score">
                     <td>{{item.name}}</td>
                     <td :style="{color:item.isBetter ? 'red' : 'green'}">
-                      {{item.score | format}}
+                      {{item.score | formatScore}}
                     </td>
                     <td v-if="item.isBetter" class="high"><span>高</span></td>
                     <td v-else class="low"><span>低</span></td>
@@ -115,8 +115,9 @@
             </div>
             <div class="info-detail">
               <p class="rate-content">{{rate.content}}</p>
-              <div class="detail-style">
-                {{rate.style}}
+              <div class="detail_">
+                <div class="detail-time">{{rate.created | formatTime}}</div>
+                <div class="detail-style">{{rate.style}}</div>
               </div>
             </div>
           </div>
@@ -129,8 +130,9 @@
           </div>
         </div>
       </scroll>
-      <bottom-bar/>
+      <bottom-bar @addCart="addCart"/>
       <back-top v-show="showTop" @backTopClick="backTopClick"/>
+      <show-toast v-show="showToast" text="添加购物车成功"/>
     </div>
   </transition>
 </template>
@@ -142,9 +144,13 @@ import Scroll from "base/scroll/Scroll";
 import HotRecommend from "./HotRecommend";
 import BottomBar from "./BottomBar";
 import BackTop from "base/backtop/BackTop";
+import ShowToast from "base/showtoast/ShowToast";
 import {getDetail, getRecommend} from "network/home";
-import {GoodInfo, RateInfo} from "common/js/myClass";
+import {GoodInfo, RateInfo, ShopInfo} from "common/js/myClass";
 import {debounce} from "common/js/util";
+
+import {mapMutations} from 'vuex'
+import {ADD_TO_CART} from "../../../store/mutation-type";
 
 export default {
   name: "GoodDetail",
@@ -154,7 +160,8 @@ export default {
     Scroll,
     HotRecommend,
     BottomBar,
-    BackTop
+    BackTop,
+    ShowToast
   },
   data() {
     return {
@@ -169,7 +176,8 @@ export default {
       hotRecommend: [],
       themeTops: [],
       probeType: 3,
-      showTop: false
+      showTop: false,
+      showToast: false
     }
   },
   created() {
@@ -180,10 +188,12 @@ export default {
   mounted() {
   },
   updated() {
-    this._calcOffsetTop()
+    setTimeout(() => {
+      this._calcOffsetTop()
+    }, 200)
   },
   filters: {
-    format(num) {
+    formatScore(num) {
       let len = num.toString().length
       if (len >= 4) {
         return num
@@ -195,6 +205,16 @@ export default {
         len++
       }
       return num
+    },
+    formatTime(time) {
+      const data = new Date(time * 1000)
+      const year = data.getFullYear() + ''
+      const month = data.getMonth() + 1
+      const day = data.getDate()
+      const hour = data.getHours()
+      const minute = data.getMinutes()
+      const second = data.getSeconds()
+      return `${year}-${month}-${day} ${hour}:${minute}:${second}`
     }
   },
   methods: {
@@ -207,7 +227,8 @@ export default {
         if (res.data.result.rate.cRate) {
           console.log(res.data.result.rate);
           this.rate = new RateInfo(res.data.result.rate.list[0])
-        }else{
+          // console.log(this.rate);
+        } else {
           this.rate = false
         }
 
@@ -240,30 +261,29 @@ export default {
     },
     _calcOffsetTop() {
       this.themeTops = []
-      if(this.$refs.paramInfo.offsetTop){
-        console.log(this.$refs.paramInfo.offsetTop);
+      if (this.$refs.paramInfo && this.$refs.paramInfo.offsetTop) {
         this.themeTops.push(this.$refs.navBar.$el.offsetTop)
         this.themeTops.push(this.$refs.paramInfo.offsetTop)
-        if(this.rate){
+        if (this.rate) {
           this.themeTops.push(this.$refs.commentInfo.offsetTop)
-        }else{
+        } else {
           this.themeTops.push(this.$refs.paramInfo.offsetTop)
         }
         this.themeTops.push(this.$refs.recommendInfo.offsetTop)
-      }else{
+      } else {
         console.log('数据请求太快,还未渲染到页面上');
       }
 
     },
     backTopClick() {
       console.log(1);
-      this.$refs.scroll.scrollTo(0,0,0)
+      this.$refs.scroll.scrollTo(0, 0, 0)
     },
     scroll(p) {
       const y = -p
       if (y > 2000) {
         this.showTop = true
-      }else{
+      } else {
         this.showTop = false
       }
       for (let i = 0; i < this.themeTops.length; i++) {
@@ -278,7 +298,22 @@ export default {
           }
         }
       }
-    }
+    },
+    addCart() {
+      const obj = new ShopInfo(this.id, this.dataInfo, this.topImages[0])
+      console.log(obj);
+      this.add_to_cart(obj)
+      this.calcTotalPrice()
+      this.showToast = true
+      setTimeout(() => {
+        this.showToast = false
+      },1000)
+    },
+    ...mapMutations({
+      add_to_cart: 'ADD_TO_CART',
+      calcTotalPrice: 'TOTAL_PRICE'
+
+    })
   }
 }
 </script>
@@ -302,7 +337,7 @@ export default {
       z-index 9
       background-color: $color-background
       color $color-theme-x
-      box-shadow 0 2px 2px 0px rgba(0,0,0,.1)
+      box-shadow 0 2px 2px 0px rgba(0, 0, 0, .1)
 
       .icon
         font-size 25px
@@ -593,10 +628,15 @@ export default {
               letter-spacing 1px
               color $color-text-m
 
-            .detail-style
+            .detail_
+              display flex
               margin-top 13px
-              color $color-text-x
               font-size: $font-size-small
+              color $color-text-x
+
+              .detail-time
+                margin-right: 10px
+
 
         .recommend-hot
           padding: 5px 10px

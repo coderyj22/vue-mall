@@ -27,7 +27,7 @@ export default {
     }
   },
   created() {
-    console.log('view:' + this.dataViews.subcategory);
+
   }
 }
 </script>
