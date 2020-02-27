@@ -153,6 +153,8 @@ export default {
             border-radius 5px
             button
               width 20px
+              border: 0
+              background-color: #fff
             span
               display-center()
               width 40px

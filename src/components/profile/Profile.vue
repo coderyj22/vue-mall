@@ -1,6 +1,6 @@
 <template>
   <div class="profile">
-    <nav-bar class="profile-nav-bar"><div slot="center">常映杰商城</div></nav-bar>
+    <nav-bar class="profile-nav-bar"><div slot="center">YJ 商城</div></nav-bar>
     <scroll class="content">
       <user-info class="user-info"/>
       <div class="order-list">
