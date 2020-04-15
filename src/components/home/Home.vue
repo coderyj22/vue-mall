@@ -118,8 +118,10 @@
             this.tabFirst = false   // 为false 之后不允许修改tabControlOffsetTop的值
           }
         }
-        this.showTop = this.scrollY >= 2000 ? true : false
-        this.showTab = this.scrollY >= this.tabControlOffsetTop ? true : false
+        // this.showTop = this.scrollY >= 2000 ? true : false
+        // this.showTab = this.scrollY >= this.tabControlOffsetTop ? true : false
+        this.showTop = this.scrollY >= 2000
+        this.showTab = this.scrollY >= this.tabControlOffsetTop
         if (this.showTab) {
           this.$refs.goods.$el.style.marginTop = '56px'
           return

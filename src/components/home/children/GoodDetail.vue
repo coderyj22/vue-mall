@@ -17,7 +17,7 @@
         <div class="wrapper">
           <div class="slider-wrapper">
             <slider class="slider" :loop="true" :autoPlay="true" v-if="topImages.length" :data="topImages">
-              <a href="" v-for="item in topImages">
+              <a v-for="item in topImages">
                 <img :src="item" alt="">
               </a>
             </slider>
@@ -229,7 +229,7 @@ export default {
         } else {
           this.rate = false
         }
-
+        console.log(res);
       })
     },
     _getRecommend() {
